@@ -90,7 +90,7 @@
     "_atlas": null
   },
   {
-    "__type__": "c4bbcxrtm5EYK41gLZHHA45",
+    "__type__": "2fc91EHX1ZLQrGiDM+AZ0np",
     "_name": "",
     "_objFlags": 0,
     "node": {
@@ -98,8 +98,8 @@
     },
     "_enabled": true,
     "label": null,
-    "distance": 100,
-    "delay": 0.2
+    "distance": 1000,
+    "delay": 1
   },
   {
     "__type__": "cc.PrefabInfo",

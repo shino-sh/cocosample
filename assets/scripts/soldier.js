@@ -8,23 +8,23 @@
 //  - [Chinese] http://www.cocos.com/docs/creator/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/editors_and_tools/creator-chapters/scripting/life-cycle-callbacks/index.html
 
-const {ccclass, property} = cc._decorator;
+cc.Class({
+    extends: cc.Component,
 
-@ccclass
-export default class Soldier extends cc.Component {
+    properties: {
+        label: {
+            default: null,
+            type: cc.Label
+        },
 
-    @property(cc.Label)
-    label: cc.Label = null;
+        shootPrefab: {
+            default: null,
+            type: cc.Prefab
+        },
 
-    @property
-    distance: int = 30;
-
-    @property
-    delay: int = 1;
-
-    @property(cc.Prefab)
-    shootPrefab: cc.Prefab = null;
-
+        distance: 30,
+        delay: 1,
+    },
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -62,7 +62,6 @@ export default class Soldier extends cc.Component {
     },
 
 
-    //
 
     shoot () {
         var newShoot = cc.instantiate(this.shootPrefab);
@@ -108,4 +107,4 @@ export default class Soldier extends cc.Component {
         }, this.node)
     },
 
-}
+});
