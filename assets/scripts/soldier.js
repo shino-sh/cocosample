@@ -7,6 +7,7 @@
 // Learn life-cycle callbacks:
 //  - [Chinese] http://www.cocos.com/docs/creator/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/editors_and_tools/creator-chapters/scripting/life-cycle-callbacks/index.html
+//  TODO 地面に足付いた判定
 
 var ActionType = cc.Enum({
     Neutral: -1,
@@ -29,12 +30,12 @@ var Soldier = cc.Class({
             type: cc.Prefab
         },
 
-        distance: 32,
+        distance: 8,
         delay: 0.1,
     },
 
     statics: {
-        JUMP_ITERATIONS: 60,
+        JUMP_ITERATIONS: 30,
         JUMP_ADD_SEP: 12
     },
 
@@ -48,11 +49,12 @@ var Soldier = cc.Class({
         // action typeの初期化
         this.actionType = ActionType.Neutral;
         this.jumpIteration = 0;
+        this.isStandingGround = true;
 
         // 各actionの設定
         this.moveRight = cc.moveBy(this.delay, cc.p(this.distance, 0));
-        this.jump = cc.moveBy(1 / 60 * Soldier.JUMP_ADD_SEP, cc.p(0, 64));
-        // this.jump = cc.jumpBy(1 / 60 * Soldier.JUMP_ADD_SEP, cc.p(0, 0), 96, 1);
+        this.moveLeft = cc.moveBy(this.delay, cc.p(-1*this.distance, 0));
+        //this.jump = cc.moveBy(1 / 60 * Soldier.JUMP_ADD_SEP, cc.p(0, 64));
     },
 
     start () {
@@ -64,27 +66,39 @@ var Soldier = cc.Class({
             case ActionType.MoveRight:
                 this.node.runAction(this.moveRight);
                 break;
+            case ActionType.MoveLeft:
+                this.node.runAction(this.moveLeft);
+                break;
             case ActionType.Jump:
-                if (this.jumpIteration % Soldier.JUMP_ADD_SEP == 0 && this.jumpIteration <= Soldier.JUMP_ITERATIONS) {
-                    this.node.runAction(this.jump);
+                if (this.jumpIteration < Soldier.JUMP_ITERATIONS) {
+                    //this.node.runAction(this.moveLeft);
+                    var rigidBody = this.node.getComponent(cc.RigidBody);
+                    rigidBody.linearVelocity = cc.v2(0, 160);
+                    this.jumpIteration++;
                 }
-                this.jumpIteration++;
                 break;
             case ActionType.Shoot:
                 this.shoot();
                 break;
         }
 
-        this.actionType = ActionType.Neutral;
+        //this.actionType = ActionType.Neutral;
     },
 
     //
     // Contact Callbacks
     //
     onBeginContact (contact, selfCollider, otherCollider) {
+    },
+
+    // will be called every time collider contact is resolved
+    onPostSolve: function (contact, selfCollider, otherCollider) {
         if (otherCollider.tag == 1) {
-            this.node.stopAction(this.jump);
-            this.jumpIteration = 0;
+            // ブロックと足の接触
+            if (selfCollider.tag == 2) {
+                this.isStandingGround = true;
+                this.jumpIteration = 0;
+            }
         }
     },
 
@@ -96,26 +110,48 @@ var Soldier = cc.Class({
 
     setInputControl () {
         var self = this;
-                        
+
         cc.eventManager.addListener({       
             event: cc.EventListener.KEYBOARD,
-        
+
             onKeyPressed (keyCode, event) {
                 switch(keyCode) {
-                    case cc.KEY.q:
-                        self.actionType = ActionType.Jump;
+                    case cc.KEY.left:
+                        self.actionType = ActionType.MoveLeft;
                         break;
-                    case cc.KEY.a:
+                    case cc.KEY.right:
                         self.actionType = ActionType.MoveRight;
                         break;
-                    case cc.KEY.s:
+                    case cc.KEY.up:
+                        if (self.isStandingGround) {
+                            self.actionType = ActionType.Jump;
+                        }
+                        break;
+                    case cc.KEY.a:
                         self.actionType = ActionType.Shoot;
                         break;
                     default:
                         self.actionType = ActionType.Neutral;
                         break;
                 }
-            }
+            },
+            onKeyReleased: function(keyCode, event) {
+                switch(keyCode) {
+                    case cc.KEY.up:
+                        self.jumpIteration = 0;
+                        self.actionType = ActionType.Neutral;
+                        self.isStandingGround = false;
+                        break;
+                    case cc.KEY.left:
+                    case cc.KEY.right:
+                    case cc.KEY.a:
+                        self.actionType = ActionType.Neutral;
+                        break;
+                    default:
+                        //self.jumpAction();
+                        break;
+                }
+            },
         }, this.node)
     },
 
