@@ -33,9 +33,8 @@ cc.Class({
             // cc.PhysicsManager.DrawBits.e_pairBit |
             cc.PhysicsManager.DrawBits.e_centerOfMassBit |
             // cc.PhysicsManager.DrawBits.e_jointBit |
-            cc.PhysicsManager.DrawBits.e_shapeBit
-            ;
-        manager.gravity = cc.v2(0, -640);
+            cc.PhysicsManager.DrawBits.e_shapeBit;
+        manager.gravity = cc.v2(0, -160);
 
 
         this.tiledMapOffset = this.tiledMap.node.position;
@@ -68,6 +67,7 @@ cc.Class({
             let boxCollider = newNode.addComponent(cc.PhysicsBoxCollider);
             // boxCollider.body = rigidBody;
             boxCollider.size = objects[i].objectSize;
+            boxCollider.tag = 1;
             boxCollider.offset = cc.v2(
                 objects[i].objectSize.width * 0.5,
                 objects[i].objectSize.height * 0.5

@@ -8,7 +8,14 @@
 //  - [Chinese] http://www.cocos.com/docs/creator/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/editors_and_tools/creator-chapters/scripting/life-cycle-callbacks/index.html
 
-cc.Class({
+var ActionType = cc.Enum({
+    Neutral: -1,
+    MoveRight: -1,
+    Jump: -1,
+    Shoot: -1
+});
+
+var Soldier = cc.Class({
     extends: cc.Component,
 
     properties: {
@@ -22,15 +29,30 @@ cc.Class({
             type: cc.Prefab
         },
 
-        distance: 30,
-        delay: 1,
+        distance: 32,
+        delay: 0.1,
+    },
+
+    statics: {
+        JUMP_ITERATIONS: 60,
+        JUMP_ADD_SEP: 12
     },
 
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
-        this.moveRight = false;
-        this.shootFlg = false;
+        var rigidBody = this.node.getComponent(cc.RigidBody);
+        // contact listenerの有効化
+        rigidBody.enabledContactListener = true;
+
+        // action typeの初期化
+        this.actionType = ActionType.Neutral;
+        this.jumpIteration = 0;
+
+        // 各actionの設定
+        this.moveRight = cc.moveBy(this.delay, cc.p(this.distance, 0));
+        this.jump = cc.moveBy(1 / 60 * Soldier.JUMP_ADD_SEP, cc.p(0, 64));
+        // this.jump = cc.jumpBy(1 / 60 * Soldier.JUMP_ADD_SEP, cc.p(0, 0), 96, 1);
     },
 
     start () {
@@ -38,30 +60,33 @@ cc.Class({
     },
 
     update (dt) {
-        var posX = this.node.x;
-        var posY = this.node.y;
-
-        if (this.moveRight) {
-            this.move = cc.moveBy(this.delay, cc.p(this.distance, 0));
-            this.node.runAction(this.move);
-            // posX += 5;
-        }
-        if (this.jumpFlg) {
-            this.jump = cc.moveBy(this.delay, cc.p(0, this.distance * 11));
-            this.node.runAction(this.jump);
-            // posY += 5;
-        }
-        if (this.shootFlg) {
-            this.shoot();
+        switch(this.actionType) {
+            case ActionType.MoveRight:
+                this.node.runAction(this.moveRight);
+                break;
+            case ActionType.Jump:
+                if (this.jumpIteration % Soldier.JUMP_ADD_SEP == 0 && this.jumpIteration <= Soldier.JUMP_ITERATIONS) {
+                    this.node.runAction(this.jump);
+                }
+                this.jumpIteration++;
+                break;
+            case ActionType.Shoot:
+                this.shoot();
+                break;
         }
 
-        // this.node.setPosition(posX, posY);
-        this.moveRight = false;
-        this.shootFlg = false;
-        this.jumpFlg = false;
+        this.actionType = ActionType.Neutral;
     },
 
-
+    //
+    // Contact Callbacks
+    //
+    onBeginContact (contact, selfCollider, otherCollider) {
+        if (otherCollider.tag == 1) {
+            this.node.stopAction(this.jump);
+            this.jumpIteration = 0;
+        }
+    },
 
     shoot () {
         var newShoot = cc.instantiate(this.shootPrefab);
@@ -71,9 +96,6 @@ cc.Class({
 
     setInputControl () {
         var self = this;
-        self.move = cc.moveBy(this.delay, cc.p(this.distance, 0));
-        self.jump = cc.moveBy(this.delay, cc.p(0, this.distance));
-        // self.node.runAction(self.move);
                         
         cc.eventManager.addListener({       
             event: cc.EventListener.KEYBOARD,
@@ -81,26 +103,16 @@ cc.Class({
             onKeyPressed (keyCode, event) {
                 switch(keyCode) {
                     case cc.KEY.q:
-                        self.moveRight = false;
-                        self.shootFlg = false;
-                        self.jumpFlg = true;
-                        // self.node.runAction(self.jump);
+                        self.actionType = ActionType.Jump;
                         break;
                     case cc.KEY.a:
-                        self.moveRight = true;
-                        self.shootFlg = false;
-                        self.jumpFlg = false;
-                        // self.node.runAction(self.move);
+                        self.actionType = ActionType.MoveRight;
                         break;
                     case cc.KEY.s:
-                        self.moveRight = false;
-                        self.shootFlg = true;
-                        self.jumpFlg = false;
+                        self.actionType = ActionType.Shoot;
                         break;
                     default:
-                        self.moveRight = false;
-                        self.shootFlg = false;
-                        self.jumpFlg = false;
+                        self.actionType = ActionType.Neutral;
                         break;
                 }
             }

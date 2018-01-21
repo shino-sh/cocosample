@@ -62,7 +62,7 @@
       "x": 0,
       "y": 0
     },
-    "_skewX": 0,
+    "_skewX": 0.1,
     "_skewY": 0,
     "_localZOrder": 0,
     "_globalZOrder": 0,
@@ -155,8 +155,8 @@
     "shootPrefab": {
       "__uuid__": "1dbf640d-5117-4310-bc2c-e9772c1aa44d"
     },
-    "distance": 30,
-    "delay": 1
+    "distance": 8,
+    "delay": 0.1
   },
   {
     "__type__": "cc.PrefabInfo",
